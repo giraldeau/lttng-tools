@@ -191,6 +191,9 @@ int context_kernel_add(struct ltt_kernel_session *ksession,
 	case LTTNG_EVENT_CONTEXT_HOSTNAME:
 		kctx.ctx = LTTNG_KERNEL_CONTEXT_HOSTNAME;
 		break;
+	case LTTNG_EVENT_CONTEXT_KERNEL_BACKTRACE:
+		kctx.ctx = LTTNG_KERNEL_CONTEXT_BACKTRACE;
+		break;
 	default:
 		return LTTNG_ERR_KERN_CONTEXT_FAIL;
 	}
