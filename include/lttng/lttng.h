@@ -127,7 +127,7 @@ enum lttng_event_context_type {
 	LTTNG_EVENT_CONTEXT_PTHREAD_ID        = 10,
 	LTTNG_EVENT_CONTEXT_HOSTNAME          = 11,
 	LTTNG_EVENT_CONTEXT_IP                = 12,
-	LTTNG_EVENT_CONTEXT_KERNEL_BACKTRACE  = 13,
+	LTTNG_EVENT_CONTEXT_KERNEL_CALLSTACK  = 13,
 };
 
 enum lttng_calibrate_type {
