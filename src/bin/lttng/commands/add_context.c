@@ -68,7 +68,8 @@ enum context_type {
 	CONTEXT_PTHREAD_ID   = 10,
 	CONTEXT_HOSTNAME     = 11,
 	CONTEXT_IP           = 12,
-	CONTEXT_CALLSTACK_KERNEL    = 13,
+	CONTEXT_CALLSTACK_KERNEL  = 13,
+	CONTEXT_CALLSTACK_USER    = 14,
 };
 
 /*
@@ -207,6 +208,7 @@ const struct ctx_opts {
 	{ "hostname", CONTEXT_HOSTNAME },
 	{ "ip", CONTEXT_IP },
 	{ "kcallstack", CONTEXT_CALLSTACK_KERNEL },
+	{ "ucallstack", CONTEXT_CALLSTACK_USER },
 	/* Perf options */
 	PERF_HW(cpu-cycles, CPU_CYCLES),
 	PERF_HW(cycles, CPU_CYCLES),

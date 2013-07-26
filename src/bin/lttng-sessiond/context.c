@@ -192,7 +192,10 @@ int context_kernel_add(struct ltt_kernel_session *ksession,
 		kctx.ctx = LTTNG_KERNEL_CONTEXT_HOSTNAME;
 		break;
 	case LTTNG_EVENT_CONTEXT_KERNEL_CALLSTACK:
-		kctx.ctx = LTTNG_KERNEL_CONTEXT_CALLSTACK;
+		kctx.ctx = LTTNG_KERNEL_CONTEXT_KCALLSTACK;
+		break;
+	case LTTNG_EVENT_CONTEXT_USER_CALLSTACK:
+		kctx.ctx = LTTNG_KERNEL_CONTEXT_UCALLSTACK;
 		break;
 	default:
 		return LTTNG_ERR_KERN_CONTEXT_FAIL;
