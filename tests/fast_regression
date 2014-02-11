@@ -26,3 +26,4 @@ regression/ust/test_event_basic
 regression/ust/test_event_tracef
 regression/ust/test_event_wildcard
 regression/ust/test_event_perf
+regression/ust/global-type-declarations/test_global_type_declarations

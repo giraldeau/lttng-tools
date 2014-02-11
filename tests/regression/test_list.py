@@ -77,6 +77,12 @@ Tests = \
     'desc': "Test tracing with 4 sessions for one application",
     'success': 0, 'enabled': True
     },
+    {
+    'bin': "ust/global_type_declarations/run", 'daemon': True, 'kern': False,
+    'name': "UST tracer - CTF global type declarations",
+    'desc': "Test tracepoints using CTF global type declarations",
+    'success': 0, 'enabled': True
+    },
 
     # Tools filtering tests
     {
