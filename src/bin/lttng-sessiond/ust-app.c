@@ -4780,7 +4780,8 @@ error_rcu_unlock:
  */
 static int add_event_ust_registry(int sock, int sobjd, int cobjd, char *name,
 		char *sig, size_t nr_fields, struct ustctl_field *fields, int loglevel,
-		char *model_emf_uri)
+		char *model_emf_uri, size_t nr_global_type_decl,
+		struct ustctl_global_type_decl *global_type_decl)
 {
 	int ret, ret_code;
 	uint32_t event_id = 0;
@@ -4837,7 +4838,7 @@ static int add_event_ust_registry(int sock, int sobjd, int cobjd, char *name,
 	ret_code = ust_registry_create_event(registry, chan_reg_key,
 			sobjd, cobjd, name, sig, nr_fields, fields, loglevel,
 			model_emf_uri, ua_sess->buffer_type, &event_id,
-			app);
+			app, nr_global_type_decl, global_type_decl);
 
 	/*
 	 * The return value is returned to ustctl so in case of an error, the
@@ -4897,11 +4898,14 @@ int ust_app_recv_notify(int sock)
 		char name[LTTNG_UST_SYM_NAME_LEN], *sig, *model_emf_uri;
 		size_t nr_fields;
 		struct ustctl_field *fields;
+		size_t nr_global_type_decl;
+		struct ustctl_global_type_decl *global_type_decl;
 
 		DBG2("UST app ustctl register event received");
 
 		ret = ustctl_recv_register_event(sock, &sobjd, &cobjd, name, &loglevel,
-				&sig, &nr_fields, &fields, &model_emf_uri);
+				&sig, &nr_fields, &fields, &model_emf_uri,
+				&nr_global_type_decl, &global_type_decl);
 		if (ret < 0) {
 			if (ret != -EPIPE && ret != -LTTNG_UST_ERR_EXITING) {
 				ERR("UST app recv event failed with ret %d", ret);
@@ -4918,7 +4922,8 @@ int ust_app_recv_notify(int sock)
 		 * to the this function.
 		 */
 		ret = add_event_ust_registry(sock, sobjd, cobjd, name, sig, nr_fields,
-				fields, loglevel, model_emf_uri);
+				fields, loglevel, model_emf_uri,
+				nr_global_type_decl, global_type_decl);
 		if (ret < 0) {
 			goto error;
 		}

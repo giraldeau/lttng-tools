@@ -400,7 +400,9 @@ int ustctl_recv_register_event(int sock,
 					 */
 	size_t *nr_fields,
 	struct ustctl_field **fields,
-	char **model_emf_uri);
+	char **model_emf_uri,
+	size_t *nr_global_type_decl,    /* global type declarations */
+	struct ustctl_global_type_decl **global_type_decl);
 
 /*
  * Returns 0 on success, negative error value on error.

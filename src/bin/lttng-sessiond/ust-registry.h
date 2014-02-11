@@ -137,6 +137,9 @@ struct ust_registry_event {
 	 * initialize the node and the event_name/signature for the match function.
 	 */
 	struct lttng_ht_node_u64 node;
+	/* Global type declarations needed by the event */
+	struct ustctl_global_type_decl *global_type_decl;
+	size_t nr_global_type_decl;
 };
 
 /*
@@ -226,7 +229,8 @@ int ust_registry_create_event(struct ust_registry_session *session,
 		uint64_t chan_key, int session_objd, int channel_objd, char *name,
 		char *sig, size_t nr_fields, struct ustctl_field *fields, int loglevel,
 		char *model_emf_uri, int buffer_type, uint32_t *event_id_p,
-		struct ust_app *app);
+		struct ust_app *app, size_t nr_global_type_decl,
+		struct ustctl_global_type_decl *global_type_decl);
 struct ust_registry_event *ust_registry_find_event(
 		struct ust_registry_channel *chan, char *name, char *sig);
 void ust_registry_destroy_event(struct ust_registry_channel *chan,

@@ -134,7 +134,8 @@ int validate_event_fields(size_t nr_fields, struct ustctl_field *fields,
 static struct ust_registry_event *alloc_event(int session_objd,
 		int channel_objd, char *name, char *sig, size_t nr_fields,
 		struct ustctl_field *fields, int loglevel, char *model_emf_uri,
-		struct ust_app *app)
+		struct ust_app *app, size_t nr_global_type_decl,
+		struct ustctl_global_type_decl *global_type_decl)
 {
 	struct ust_registry_event *event = NULL;
 
@@ -164,6 +165,8 @@ static struct ust_registry_event *alloc_event(int session_objd,
 		strncpy(event->name, name, sizeof(event->name));
 		event->name[sizeof(event->name) - 1] = '\0';
 	}
+	event->nr_global_type_decl = nr_global_type_decl;
+	event->global_type_decl = global_type_decl;
 	cds_lfht_node_init(&event->node.node);
 
 error:
@@ -250,7 +253,8 @@ int ust_registry_create_event(struct ust_registry_session *session,
 		uint64_t chan_key, int session_objd, int channel_objd, char *name,
 		char *sig, size_t nr_fields, struct ustctl_field *fields, int loglevel,
 		char *model_emf_uri, int buffer_type, uint32_t *event_id_p,
-		struct ust_app *app)
+		struct ust_app *app, size_t nr_global_type_decl,
+		struct ustctl_global_type_decl *global_type_decl)
 {
 	int ret;
 	uint32_t event_id;
@@ -287,7 +291,7 @@ int ust_registry_create_event(struct ust_registry_session *session,
 	}
 
 	event = alloc_event(session_objd, channel_objd, name, sig, nr_fields,
-			fields, loglevel, model_emf_uri, app);
+			fields, loglevel, model_emf_uri, app, nr_global_type_decl, global_type_decl);
 	if (!event) {
 		ret = -ENOMEM;
 		goto error_free;
