@@ -323,6 +323,40 @@ int _lttng_one_global_type_statedump(struct ust_registry_session *session,
 		const struct ustctl_global_type_decl *global_type_decl)
 {
 	int ret = 0, i;
+	struct ust_registry_global_type_decl *global_type;
+	struct cds_lfht_node *nodep;
+	struct lttng_ht_iter iter;
+	struct lttng_ht_node_str *node;
+
+	/* Check if the global type was already dumped */
+	global_type = zmalloc(sizeof(*global_type));
+	if (!global_type) {
+		PERROR("zmalloc ust registry global type");
+		return -ENOMEM;
+	}
+	global_type->category = global_type_decl->mtype;
+	switch (global_type_decl->mtype) {
+	case ustctl_mtype_enum:
+		strncpy(global_type->name, global_type_decl->u.ctf_enum.name, LTTNG_UST_SYM_NAME_LEN);
+		global_type->name[LTTNG_UST_SYM_NAME_LEN - 1] = '\0';
+		break;
+	default:
+		return -EINVAL;
+	}
+
+	rcu_read_lock();
+	cds_lfht_lookup(session->global_types_ht->ht, session->global_types_ht->hash_fct((void *) global_type, lttng_ht_seed),
+			session->global_types_ht->match_fct, global_type, &iter.iter);
+	node = lttng_ht_iter_get_node_str(&iter);
+	if (node != NULL) {
+		DBG("global type %s already in metadata", global_type->name);
+		rcu_read_unlock();
+		free(global_type);
+		return ret;
+	}
+	cds_lfht_node_init(&global_type->node.node);
+	rcu_read_unlock();
+
 
 	switch (global_type_decl->mtype) {
 	case ustctl_mtype_enum:
@@ -372,6 +406,17 @@ int _lttng_one_global_type_statedump(struct ust_registry_session *session,
 		return -EINVAL;
 	}
 
+	/* Flag this global type as dumped */
+	/*
+	 * This is an add unique with a custom match function for global types.
+	 * The node are matched using the category and global type name.
+	 */
+	rcu_read_lock();
+	nodep = cds_lfht_add_unique(session->global_types_ht->ht, session->global_types_ht->hash_fct(global_type, lttng_ht_seed),
+			session->global_types_ht->match_fct, global_type, &global_type->node.node);
+	assert(nodep == &global_type->node.node);
+	rcu_read_unlock();
+
 	return ret;
 }
 
@@ -389,6 +434,7 @@ int _lttng_global_type_decl_statedump(struct ust_registry_session *session,
 		const struct ustctl_global_type_decl *global_type_decl = &event->global_type_decl[i];
 
 		ret = _lttng_one_global_type_statedump(session, global_type_decl);
+		DBG("_lttng_global_type_decl_statedump %d", ret);
 		if (ret)
 			return ret;
 	}

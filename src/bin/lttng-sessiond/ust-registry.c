@@ -74,6 +74,49 @@ static unsigned long ht_hash_event(void *_key, unsigned long seed)
 }
 
 /*
+ * Hash table match function for global type declarations in the session.
+ */
+static int ht_match_global_type(struct cds_lfht_node *node, const void *_key)
+{
+	struct ust_registry_global_type_decl *global_type;
+	const struct ust_registry_global_type_decl *key;
+
+	assert(node);
+	assert(_key);
+
+	global_type = caa_container_of(node, struct ust_registry_global_type_decl, node.node);
+	assert(global_type);
+	key = _key;
+
+	/* It has to be a perfect match. */
+	if (global_type->category != key->category) {
+		goto no_match;
+	}
+	if (strncmp(global_type->name, key->name, strlen(global_type->name) != 0)) {
+		goto no_match;
+	}
+
+	/* Match */
+	return 1;
+
+no_match:
+	return 0;
+}
+
+static unsigned long ht_hash_global_type(void *_key, unsigned long seed)
+{
+	uint64_t xored_key;
+	struct ust_registry_global_type_decl *key = _key;
+
+	assert(key);
+
+	xored_key = (uint64_t) (hash_key_ulong((void *)key->category, seed) ^
+				hash_key_str(key->name, seed));
+
+	return hash_key_u64(&xored_key, seed);
+}
+
+/*
  * Return negative value on error, 0 if OK.
  *
  * TODO: we could add stricter verification of more types to catch
@@ -571,6 +614,16 @@ int ust_registry_session_init(struct ust_registry_session **sessionp,
 	session->uint64_t_alignment = uint64_t_alignment;
 	session->long_alignment = long_alignment;
 	session->byte_order = byte_order;
+	session->global_types_ht = 0;
+	session->global_types_ht = lttng_ht_new(0, LTTNG_HT_TYPE_STRING);
+	if (!session->global_types_ht) {
+		ret = -ENOMEM;
+		goto error;
+	}
+
+	/* Set custom match function. */
+	session->global_types_ht->match_fct = ht_match_global_type;
+	session->global_types_ht->hash_fct = ht_hash_global_type;
 
 	session->channels = lttng_ht_new(0, LTTNG_HT_TYPE_U64);
 	if (!session->channels) {
@@ -611,6 +664,7 @@ void ust_registry_session_destroy(struct ust_registry_session *reg)
 	int ret;
 	struct lttng_ht_iter iter;
 	struct ust_registry_channel *chan;
+	struct ust_registry_global_type_decl *global_type;
 
 	if (!reg) {
 		return;
@@ -635,4 +689,19 @@ void ust_registry_session_destroy(struct ust_registry_session *reg)
 	}
 
 	free(reg->metadata);
+
+	/* Destroy the global type hash table */
+	if (reg->global_types_ht) {
+		rcu_read_lock();
+		/* Destroy all global types associated with this registry. */
+		cds_lfht_for_each_entry(reg->global_types_ht->ht, &iter.iter, global_type,
+				node.node) {
+			/* Delete the node from the ht and free it. */
+			ret = lttng_ht_del(reg->global_types_ht, &iter);
+			assert(!ret);
+			free(global_type);
+		}
+		rcu_read_unlock();
+		ht_cleanup_push(reg->global_types_ht);
+	}
 }

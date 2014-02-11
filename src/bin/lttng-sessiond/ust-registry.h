@@ -31,6 +31,16 @@
 
 struct ust_app;
 
+struct ust_registry_global_type_decl {
+	uint32_t category;
+	char name[LTTNG_UST_SYM_NAME_LEN];
+	/*
+	 * Node in the ust-session hash table. The global type name and
+	 * category is used to initialize the node and for the match function.
+	 */
+	struct lttng_ht_node_u64 node;
+};
+
 struct ust_registry_session {
 	/*
 	 * With multiple writers and readers, use this lock to access the registry.
@@ -75,6 +85,11 @@ struct ust_registry_session {
 	 * deletes its sessions.
 	 */
 	unsigned int metadata_closed;
+	/*
+	 * Hash table containing global type declarations already dumped into the
+	 * metadata. MUST be accessed with a RCU read side lock acquired.
+	 */
+	struct lttng_ht *global_types_ht;
 };
 
 struct ust_registry_channel {
