@@ -188,6 +188,12 @@ int _lttng_field_statedump(struct ust_registry_session *session,
 			field->type.u.basic.integer.reverse_byte_order ? bo_reverse : bo_native,
 			field->name);
 		break;
+	case ustctl_atype_enum:
+		ret = lttng_metadata_printf(session,
+			"		enum __ust_enum__%s _%s;\n",
+			field->type.u.basic.enumeration.name,
+			field->name);
+		break;
 	case ustctl_atype_float:
 		ret = lttng_metadata_printf(session,
 			"		floating_point { exp_dig = %u; mant_dig = %u; align = %u;%s } _%s;\n",
@@ -197,8 +203,6 @@ int _lttng_field_statedump(struct ust_registry_session *session,
 			field->type.u.basic.integer.reverse_byte_order ? bo_reverse : bo_native,
 			field->name);
 		break;
-	case ustctl_atype_enum:
-		return -EINVAL;
 	case ustctl_atype_array:
 	{
 		const struct ustctl_basic_type *elem_type;
@@ -311,6 +315,87 @@ int _lttng_fields_metadata_statedump(struct ust_registry_session *session,
 }
 
 /*
+ * Dumps a global type to the metadata file for the session. It should
+ * verify whether this metadata was already dumped by a previous event.
+ */
+static
+int _lttng_one_global_type_statedump(struct ust_registry_session *session,
+		const struct ustctl_global_type_decl *global_type_decl)
+{
+	int ret = 0, i;
+
+	switch (global_type_decl->mtype) {
+	case ustctl_mtype_enum:
+	{
+		const struct ustctl_enum *uenum;
+
+		uenum = &global_type_decl->u.ctf_enum;
+		ret = lttng_metadata_printf(session,
+			"enum __ust_enum__%s: integer { size = %u; align = %u; signed = %u; encoding = %s; base = %u; } {\n",
+			uenum->name,
+			uenum->container_type.size,
+			uenum->container_type.alignment,
+			uenum->container_type.signedness,
+			(uenum->container_type.encoding == ustctl_encode_none)
+				? "none"
+				: (uenum->container_type.encoding == ustctl_encode_UTF8)
+					? "UTF8"
+					: "ASCII",
+			uenum->container_type.base);
+		if (ret)
+			return ret;
+		/* Dump the entries */
+		for (i = 0; i < uenum->len; i++) {
+			struct ustctl_enum_entry entry;
+
+			entry = uenum->entries[i];
+			if (entry.start == entry.end) {
+				ret = lttng_metadata_printf(session,
+						"	%s = %d,\n",
+						entry.string, entry.start);
+				if (ret)
+					return ret;
+			} else {
+				ret = lttng_metadata_printf(session,
+						"	%s = %d ... %d,\n",
+						entry.string, entry.start, entry.end);
+				if (ret)
+					return ret;
+			}
+		}
+		ret = lttng_metadata_printf(session, "};\n\n");
+		if (ret)
+			return ret;
+		break;
+	}
+	default:
+		return -EINVAL;
+	}
+
+	return ret;
+}
+
+/*
+ * This function dumps to the metadata the global type declarations used by
+ * the event.
+ */
+static
+int _lttng_global_type_decl_statedump(struct ust_registry_session *session,
+		struct ust_registry_event *event)
+{
+	int ret = 0, i;
+
+	for (i = 0; i < event->nr_global_type_decl; i++) {
+		const struct ustctl_global_type_decl *global_type_decl = &event->global_type_decl[i];
+
+		ret = _lttng_one_global_type_statedump(session, global_type_decl);
+		if (ret)
+			return ret;
+	}
+	return ret;
+}
+
+/*
  * Should be called with session registry mutex held.
  */
 int ust_metadata_event_statedump(struct ust_registry_session *session,
@@ -322,6 +407,11 @@ int ust_metadata_event_statedump(struct ust_registry_session *session,
 	/* Don't dump metadata events */
 	if (chan->chan_id == -1U)
 		return 0;
+
+	/* Dump the global types needed by this event */
+	ret = _lttng_global_type_decl_statedump(session, event);
+	if (ret)
+		goto end;
 
 	ret = lttng_metadata_printf(session,
 		"event {\n"
