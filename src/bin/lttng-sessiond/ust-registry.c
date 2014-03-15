@@ -107,10 +107,12 @@ static unsigned long ht_hash_global_type(void *_key, unsigned long seed)
 {
 	uint64_t xored_key;
 	struct ust_registry_global_type_decl *key = _key;
+	void *category;
 
 	assert(key);
 
-	xored_key = (uint64_t) (hash_key_ulong((void *)key->category, seed) ^
+	category = (void *) (unsigned long) key->category;
+	xored_key = (uint64_t) (hash_key_ulong(category, seed) ^
 				hash_key_str(key->name, seed));
 
 	return hash_key_u64(&xored_key, seed);
