@@ -84,7 +84,7 @@ current_test += 1
 if len(event_lines) != 4:
     bail("Unexpected number of events found in resulting trace (" + session_info.trace_path + ")." )
 
-match = re.search(r".*ust_tests_gtd:(.*):.*enumfield = \( (.*) :.*enumfield_bis = \( (.*) :.*", event_lines[0])
+match = re.search(r".*ust_tests_gtd:(.*):.*enumfield = \( \"(.*)\" :.*enumfield_bis = \( \"(.*)\" :.*", event_lines[0])
 print_test_result(match is not None and match.group(1) == "tptest", current_test,\
                       "First tracepoint is present")
 current_test += 1
@@ -97,7 +97,7 @@ print_test_result(match is not None and match.group(3) == "one", current_test,\
                       "First tracepoint's second enum value maps to one")
 current_test += 1
 
-match = re.search(r".*ust_tests_gtd:(.*):.*enumfield = \( (.*) :.*", event_lines[1])
+match = re.search(r".*ust_tests_gtd:(.*):.*enumfield = \( \"(.*)\" :.*", event_lines[1])
 print_test_result(match is not None and match.group(1) == "tptest_bis", current_test,\
                       "Second tracepoint is present")
 current_test += 1
@@ -106,7 +106,7 @@ print_test_result(match is not None and match.group(2) == "zero", current_test,\
                       "Second tracepoint's enum value maps to zero")
 current_test += 1
 
-match = re.search(r".*ust_tests_gtd:(.*):.*enumfield = \( (.*) :.*enumfield_bis = \( (.*) .*", event_lines[2])
+match = re.search(r".*ust_tests_gtd:(.*):.*enumfield = \( \"(.*)\" :.*enumfield_bis = \( \"(.*)\" .*", event_lines[2])
 
 print_test_result(match is not None and match.group(2) == "one", current_test,\
                       "Third tracepoint's enum value maps to one")
