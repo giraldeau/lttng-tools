@@ -28,7 +28,8 @@
 
 #include <lttng/tracepoint.h>
 
-TRACEPOINT_ENUM(ust_tests_gtd, testenum, int,
+TRACEPOINT_ENUM(ust_tests_gtd, testenum,
+	ctf_enum_integer(int),
 	TP_ENUM_VALUES(
 		ctf_enum_value("zero", 0)
 		ctf_enum_value("one", 1)
