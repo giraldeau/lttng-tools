@@ -381,18 +381,57 @@ int _lttng_one_global_type_statedump(struct ust_registry_session *session,
 		/* Dump the entries */
 		for (i = 0; i < uenum->len; i++) {
 			struct ustctl_enum_entry entry;
+			int j, len;
+
+			ret = lttng_metadata_printf(session,
+					"	\"",
+					entry.string);
+			if (ret)
+				return ret;
 
 			entry = uenum->entries[i];
+			len = strlen(entry.string);
+			/* Escape the character " */
+			for (j = 0; j < len; j++) {
+				char c = entry.string[j];
+
+				switch (c) {
+				case '"':
+					ret = lttng_metadata_printf(session,
+							"\\\"");
+					if (ret)
+						return ret;
+					break;
+				case '\\':
+					ret = lttng_metadata_printf(session,
+							"\\\\");
+					if (ret)
+						return ret;
+					break;
+				default:
+					ret = lttng_metadata_printf(session,
+							"%c",
+							c);
+					if (ret)
+						return ret;
+					break;
+				}
+			}
+			ret = lttng_metadata_printf(session,
+					"\" = ",
+					entry.string);
+			if (ret)
+				return ret;
 			if (entry.start == entry.end) {
 				ret = lttng_metadata_printf(session,
-						"	%s = %d,\n",
-						entry.string, entry.start);
+						"%d,\n",
+						entry.start);
 				if (ret)
 					return ret;
 			} else {
 				ret = lttng_metadata_printf(session,
-						"	%s = %d ... %d,\n",
-						entry.string, entry.start, entry.end);
+						"%d ... %d,\n",
+						entry.start, entry.end);
 				if (ret)
 					return ret;
 			}
