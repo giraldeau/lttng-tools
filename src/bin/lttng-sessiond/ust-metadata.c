@@ -271,6 +271,14 @@ int _lttng_field_statedump(struct ust_registry_session *session,
 				" { encoding = ASCII; }" : "",
 			field->name);
 		break;
+	case ustctl_atype_structure:
+	{
+		ret = lttng_metadata_printf(session,
+			"		struct __ust_struct__%s _%s;\n",
+			field->type.u.structure.name,
+			field->name);
+		break;
+	}
 	default:
 		return -EINVAL;
 	}
@@ -340,6 +348,12 @@ int _lttng_one_global_type_statedump(struct ust_registry_session *session,
 		strncpy(global_type->name, global_type_decl->u.ctf_enum.name, LTTNG_UST_SYM_NAME_LEN);
 		global_type->name[LTTNG_UST_SYM_NAME_LEN - 1] = '\0';
 		break;
+	case ustctl_mtype_structure:
+			strncpy(global_type->name,
+				global_type_decl->u.ctf_structure.name,
+				LTTNG_UST_SYM_NAME_LEN);
+			global_type->name[LTTNG_UST_SYM_NAME_LEN - 1] = '\0';
+			break;
 	default:
 		return -EINVAL;
 	}
@@ -357,7 +371,8 @@ int _lttng_one_global_type_statedump(struct ust_registry_session *session,
 	cds_lfht_node_init(&global_type->node.node);
 	rcu_read_unlock();
 
-
+	DBG("adding global type %s of type %d to metadata",
+			global_type->name, global_type_decl->mtype);
 	switch (global_type_decl->mtype) {
 	case ustctl_mtype_enum:
 	{
@@ -435,6 +450,30 @@ int _lttng_one_global_type_statedump(struct ust_registry_session *session,
 				if (ret)
 					return ret;
 			}
+		}
+		ret = lttng_metadata_printf(session, "};\n\n");
+		if (ret)
+			return ret;
+		break;
+	}
+	case ustctl_mtype_structure:
+	{
+		const struct ustctl_structure *ustruct;
+
+		ustruct = &global_type_decl->u.ctf_structure;
+		ret = lttng_metadata_printf(session,
+			"struct __ust_struct__%s {\n",
+			ustruct->name);
+		if (ret)
+			return ret;
+		/* Dump the fields */
+		for (i = 0; i < ustruct->nr_fields; i++) {
+			struct ustctl_field field;
+
+			field = ustruct->fields[i];
+			ret = _lttng_field_statedump(session, &field);
+			if (ret)
+				return ret;
 		}
 		ret = lttng_metadata_printf(session, "};\n\n");
 		if (ret)
