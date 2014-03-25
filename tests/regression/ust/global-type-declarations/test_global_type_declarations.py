@@ -29,7 +29,7 @@ test_utils_path = test_utils_path + "/utils"
 sys.path.append(test_utils_path)
 from test_utils import *
 
-NR_TESTS = 9
+NR_TESTS = 12
 current_test = 1
 print("1..{0}".format(NR_TESTS))
 
@@ -78,13 +78,14 @@ current_test += 1
 if babeltrace_process.returncode != 0:
     bail("Unreadable trace; can't proceed with analysis.")
 
-print_test_result(len(event_lines) == 4, current_test, "Correct number of events found in resulting trace")
+print_test_result(len(event_lines) == 6, current_test, "Correct number of events found in resulting trace")
 current_test += 1
 
-if len(event_lines) != 4:
+if len(event_lines) != 6:
     bail("Unexpected number of events found in resulting trace (" + session_info.trace_path + ")." )
 
-match = re.search(r".*ust_tests_gtd:(.*):.*enumfield = \( \"(.*)\" :.*enumfield_bis = \( \"(.*)\" :.*", event_lines[0])
+# Test enumeration fields in tracepoints
+match = re.search(r".*ust_tests_gtd:(.*):.*enumfield = \( (.*) :.*enumfield_bis = \( (.*) :.*", event_lines[0])
 print_test_result(match is not None and match.group(1) == "tptest", current_test,\
                       "First tracepoint is present")
 current_test += 1
@@ -97,7 +98,7 @@ print_test_result(match is not None and match.group(3) == "one", current_test,\
                       "First tracepoint's second enum value maps to one")
 current_test += 1
 
-match = re.search(r".*ust_tests_gtd:(.*):.*enumfield = \( \"(.*)\" :.*", event_lines[1])
+match = re.search(r".*ust_tests_gtd:(.*):.*enumfield = \( (.*) :.*", event_lines[1])
 print_test_result(match is not None and match.group(1) == "tptest_bis", current_test,\
                       "Second tracepoint is present")
 current_test += 1
@@ -106,9 +107,27 @@ print_test_result(match is not None and match.group(2) == "zero", current_test,\
                       "Second tracepoint's enum value maps to zero")
 current_test += 1
 
-match = re.search(r".*ust_tests_gtd:(.*):.*enumfield = \( \"(.*)\" :.*enumfield_bis = \( \"(.*)\" .*", event_lines[2])
+match = re.search(r".*ust_tests_gtd:(.*):.*enumfield = \( (.*) :.*enumfield_bis = \( (.*) .*", event_lines[2])
 
 print_test_result(match is not None and match.group(2) == "one", current_test,\
                       "Third tracepoint's enum value maps to one")
+current_test += 1
+
+# Test structure fields in tracepoint
+match = re.search(r".*ust_tests_gtd:(.*):.*structfield = { _outer_seqfield_length = 4, outer_seqfield = \[ \[0\] = 116, \[1\] = 101, \[2\] = 115, \[3\] = 116 \].*", event_lines[4])
+print_test_result(match is not None and match.group(1) == "tptest_struct", current_test,\
+                      "Struct field in tracepoint is present with field dynamic sequence")
+current_test += 1
+
+# Test inner structure fields in tracepoint
+match = re.search(r".*ust_tests_gtd:(.*):.*innerfield = { arrfield = \[ \[0\] = 116, \[1\] = 101, \[2\] = 115, \[3\] = 116, \[4\] = 0, \[5\] = 0, \[6\] = 0, \[7\] = 0, \[8\] = 0, \[9\] = 0 \], _inner_seqfield_length = 4, inner_seqfield = \[ \[0\] = 116, \[1\] = 101, \[2\] = 115, \[3\] = 116 \], enumfield = \( zero : container = 0 \) } }.*", event_lines[4])
+print_test_result(match is not None and match.group(1) == "tptest_struct", current_test,\
+                      "Inner struct field inside another struct is present with fields dynamic sequence, array and enumeration")
+current_test += 1
+
+match = re.search(r".*ust_tests_gtd:(.*):.*enumfield = \( one : container = 1 \) }", event_lines[5])
+print_test_result(match is not None and match.group(1) == "tptest_bis", current_test,\
+                      "Tracepoint after struct and dynamic field is correct")
+current_test += 1
 
 shutil.rmtree(session_info.tmp_directory)

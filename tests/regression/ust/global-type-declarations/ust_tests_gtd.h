@@ -36,6 +36,27 @@ TRACEPOINT_ENUM(ust_tests_gtd, testenum,
 	)
 )
 
+/* Structure contains dynamic field and enumeration */
+TRACEPOINT_STRUCT(ust_tests_gtd, inner_struct,
+	TP_ARGS(char *, text, size_t, textlen,
+		int, enumvalue),
+	TP_FIELDS(
+		ctf_array(char, arrfield, text, 10)
+		ctf_sequence(char, inner_seqfield, text, size_t, textlen)
+		ctf_enum(ust_tests_gtd, testenum, enumfield, enumvalue)
+	)
+)
+
+/* Structure contains dynamic field and another structure */
+TRACEPOINT_STRUCT(ust_tests_gtd, outer_struct,
+	TP_ARGS(char *, text, size_t, textlen,
+		int, enumvalue),
+	TP_FIELDS(
+		ctf_sequence(char, outer_seqfield, text, size_t, textlen)
+		ctf_struct(ust_tests_gtd, inner_struct, innerfield, text, textlen, enumvalue)
+	)
+)
+
 /*
  * Enumeration field is used twice to make sure the global type declaration
  * is entered only once in the metadata file.
@@ -56,6 +77,18 @@ TRACEPOINT_EVENT(ust_tests_gtd, tptest_bis,
 	TP_ARGS(int, enumval),
 	TP_FIELDS(
 		ctf_enum(ust_tests_gtd, testenum, enumfield, enumval)
+	)
+)
+
+/*
+ * This structure uses a structure fields that contains both dynamic fields
+ * and another structure, who itself contains dynamic fields and an
+ * enumeration.
+ */
+TRACEPOINT_EVENT(ust_tests_gtd, tptest_struct,
+	TP_ARGS(int, enumval, char *, text, size_t, textlen),
+	TP_FIELDS(
+		ctf_struct(ust_tests_gtd, outer_struct, structfield, text, textlen, enumval)
 	)
 )
 

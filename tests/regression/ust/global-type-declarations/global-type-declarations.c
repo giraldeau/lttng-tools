@@ -27,11 +27,20 @@
 int main(int argc, char *argv[])
 {
 	int i;
+	char text[10] = "test";
 
 	for (i = 0; i < 2; i++) {
 		tracepoint(ust_tests_gtd, tptest, i%2, (i+1)%2);
 		tracepoint(ust_tests_gtd, tptest_bis, i%2);
 	}
+
+	tracepoint(ust_tests_gtd, tptest_struct, 0, text, strlen(text));
+
+	/*
+	 * Add a normal tracepoint after, just to be sure the previous dynamic
+	 * fields didn't wrongly offset the next event.
+	 */
+	tracepoint(ust_tests_gtd, tptest_bis, 1);
 
 	return 0;
 }
