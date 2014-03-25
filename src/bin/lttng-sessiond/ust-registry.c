@@ -136,6 +136,7 @@ int validate_event_field(struct ustctl_field *field,
 	case ustctl_atype_array:
 	case ustctl_atype_sequence:
 	case ustctl_atype_string:
+	case ustctl_atype_structure:
 		break;
 
 	case ustctl_atype_float:
