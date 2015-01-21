@@ -246,20 +246,36 @@ int _lttng_field_statedump(struct ust_registry_session *session,
 		if (ret)
 			return ret;
 
-		ret = lttng_metadata_printf(session,
-			"		integer { size = %u; align = %u; signed = %u; encoding = %s; base = %u;%s } _%s[ __%s_length ];\n",
-			elem_type->u.basic.integer.size,
-			(unsigned int) elem_type->u.basic.integer.alignment,
-			elem_type->u.basic.integer.signedness,
-			(elem_type->u.basic.integer.encoding == ustctl_encode_none)
-				? "none"
-				: ((elem_type->u.basic.integer.encoding == ustctl_encode_UTF8)
-					? "UTF8"
-					: "ASCII"),
-			elem_type->u.basic.integer.base,
-			elem_type->u.basic.integer.reverse_byte_order ? bo_reverse : bo_native,
-			field->name,
-			field->name);
+		switch (elem_type->atype) {
+		case ustctl_atype_structure:
+		{
+			ret = lttng_metadata_printf(session,
+				"		struct __ust_struct__%s _%s[ __%s_length ];\n",
+				elem_type->u.basic.substructure.name,
+				field->name,
+				field->name);
+			break;
+		}
+		default:
+		{
+			ret = lttng_metadata_printf(session,
+				"		integer { size = %u; align = %u; signed = %u; encoding = %s; base = %u;%s } _%s[ __%s_length ];\n",
+				elem_type->u.basic.integer.size,
+				(unsigned int) elem_type->u.basic.integer.alignment,
+				elem_type->u.basic.integer.signedness,
+				(elem_type->u.basic.integer.encoding == ustctl_encode_none)
+					? "none"
+					: ((elem_type->u.basic.integer.encoding == ustctl_encode_UTF8)
+						? "UTF8"
+						: "ASCII"),
+				elem_type->u.basic.integer.base,
+				elem_type->u.basic.integer.reverse_byte_order ? bo_reverse : bo_native,
+				field->name,
+				field->name);
+			break;
+		}
+		}
+
 		break;
 	}
 
