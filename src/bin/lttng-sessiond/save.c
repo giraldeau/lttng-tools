@@ -241,8 +241,14 @@ const char *get_kernel_context_type_string(
 	case LTTNG_KERNEL_CONTEXT_NEED_RESCHEDULE:
 		context_type_string = config_event_context_need_reschedule;
 		break;
-	case LTTNG_KERNEL_CONTEXT_MIGRATABLE:
-		context_type_string = config_event_context_migratable;
+	case LTTNG_KERNEL_CONTEXT_CALLSTACK_KERNEL:
+		context_type_string = config_event_context_callstack_kernel;
+		break;
+	case LTTNG_KERNEL_CONTEXT_CALLSTACK_USER_FP:
+		context_type_string = config_event_context_callstack_user_fp;
+		break;
+	case LTTNG_KERNEL_CONTEXT_CALLSTACK_USER_UNW:
+		context_type_string = config_event_context_callstack_user_unw;
 		break;
 	default:
 		context_type_string = NULL;

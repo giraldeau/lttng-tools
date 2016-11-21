@@ -79,7 +79,8 @@ enum context_type {
 	CONTEXT_NEED_RESCHEDULE = 18,
 	CONTEXT_MIGRATABLE   = 19,
 	CONTEXT_CALLSTACK_KERNEL = 20,
-	CONTEXT_CALLSTACK_USER = 21,
+	CONTEXT_CALLSTACK_USER_FP = 21,
+	CONTEXT_CALLSTACK_USER_UNW = 22,
 };
 
 /*
@@ -237,7 +238,8 @@ const struct ctx_opts {
 	{ "need_reschedule", CONTEXT_NEED_RESCHEDULE },
 	{ "migratable", CONTEXT_MIGRATABLE },
 	{ "callstack-kernel", CONTEXT_CALLSTACK_KERNEL },
-	{ "callstack-user", CONTEXT_CALLSTACK_USER },
+	{ "callstack-user-fp", CONTEXT_CALLSTACK_USER_FP },
+	{ "callstack-user-unw", CONTEXT_CALLSTACK_USER_UNW },
 
 	/* Perf options */
 

@@ -177,6 +177,9 @@ LTTNG_HIDDEN const char * const config_event_context_interruptible = "INTERRUPTI
 LTTNG_HIDDEN const char * const config_event_context_preemptible = "PREEMPTIBLE";
 LTTNG_HIDDEN const char * const config_event_context_need_reschedule = "NEED_RESCHEDULE";
 LTTNG_HIDDEN const char * const config_event_context_migratable = "MIGRATABLE";
+LTTNG_HIDDEN const char * const config_event_context_callstack_kernel = "CALLSTACK_KERNEL";
+LTTNG_HIDDEN const char * const config_event_context_callstack_user_fp = "CALLSTACK_USER_FP";
+LTTNG_HIDDEN const char * const config_event_context_callstack_user_unw = "CALLSTACK_USER_UNW";
 
 /* Deprecated symbols */
 const char * const config_element_perf;
@@ -1011,6 +1014,15 @@ int get_context_type(xmlChar *context_type)
 	} else if (!strcmp((char *) context_type,
 		config_event_context_migratable)) {
 		ret = LTTNG_EVENT_CONTEXT_MIGRATABLE;
+	} else if (!strcmp((char *) context_type,
+		config_event_context_callstack_kernel)) {
+		ret = LTTNG_EVENT_CONTEXT_CALLSTACK_KERNEL;
+	} else if (!strcmp((char *) context_type,
+		config_event_context_callstack_user_fp)) {
+		ret = LTTNG_EVENT_CONTEXT_CALLSTACK_USER_FP;
+	} else if (!strcmp((char *) context_type,
+		config_event_context_callstack_user_unw)) {
+		ret = LTTNG_EVENT_CONTEXT_CALLSTACK_USER_UNW;
 	} else {
 		goto error;
 	}
